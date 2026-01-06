@@ -10,26 +10,34 @@ from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
 
+import torch
+
 def run_linear(
     d_in: int,
     d_out: int,
-    weights: Float[Tensor, " d_out d_in"],
-    in_features: Float[Tensor, " ... d_in"],
-) -> Float[Tensor, " ... d_out"]:
+    weights: torch.Tensor,
+    in_features: torch.Tensor,
+) -> torch.Tensor:
     """
     Given the weights of a Linear layer, compute the transformation of a batched input.
-
-    Args:
-        in_dim (int): The size of the input dimension
-        out_dim (int): The size of the output dimension
-        weights (Float[Tensor, "d_out d_in"]): The linear weights to use
-        in_features (Float[Tensor, "... d_in"]): The output tensor to apply the function to
-
-    Returns:
-        Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
+    from cs336_basics.transfomer.linear import Linear
 
-    raise NotImplementedError
+    # Choose a consistent dtype/device (tests通常期望 float32 + cpu；但这里也兼容传入 weights 的 dtype)
+    device = torch.device("cpu")
+    dtype = torch.float32  # 如果你想严格跟 weights 走，也可以用: weights.dtype
+
+    linear = Linear(d_in, d_out, device=device, dtype=dtype)
+
+    # Prepare state_dict
+    state = {"weight": weights.to(device=device, dtype=dtype)}
+
+    # Load weights into the module
+    linear.load_state_dict(state, strict=False)
+
+    # Ensure input matches module dtype/device
+    in_features = in_features.to(device=device, dtype=dtype)
+    return linear(in_features)
 
 
 def run_embedding(
@@ -300,7 +308,7 @@ def run_transformer_lm(
         num_heads (int): Number of heads to use in multi-headed attention. `d_model` must be
             evenly divisible by `num_heads`.
         d_ff (int): Dimensionality of the feed-forward inner layer (section 3.3).
-        rope_theta (float): The RoPE $\Theta$ parameter.
+        rope_theta (float): The RoPE $\\Theta$ parameter.
         weights (dict[str, Tensor]):
             State dict of our reference implementation. {num_layers} refers to an
             integer between `0` and `num_layers - 1` (the layer index).
