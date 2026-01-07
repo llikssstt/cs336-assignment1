@@ -43,9 +43,9 @@ def run_linear(
 def run_embedding(
     vocab_size: int,
     d_model: int,
-    weights: Float[Tensor, " vocab_size d_model"],
-    token_ids: Int[Tensor, " ..."],
-) -> Float[Tensor, " ... d_model"]:
+    weights: torch.Tensor,
+    token_ids: torch.Tensor,
+) -> torch.Tensor:
     """
     Given the weights of an Embedding layer, get the embeddings for a batch of token ids.
 
@@ -59,17 +59,29 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
 
-    raise NotImplementedError
+    from cs336_basics.transfomer.embedding import Embedding
+
+    device = torch.device('cpu')
+
+    dtype = torch.float32
+
+    embedding = Embedding(vocab_size, d_model, dtype=dtype, device=device)
+
+    state = {"weight": weights.to(device=device, dtype=dtype)}
+
+    embedding.load_state_dict(state, strict=False)
+
+    return embedding(token_ids)
 
 
 def run_swiglu(
     d_model: int,
     d_ff: int,
-    w1_weight: Float[Tensor, " d_ff d_model"],
-    w2_weight: Float[Tensor, " d_model d_ff"],
-    w3_weight: Float[Tensor, " d_ff d_model"],
-    in_features: Float[Tensor, " ... d_model"],
-) -> Float[Tensor, " ... d_model"]:
+    w1_weight: torch.Tensor,
+    w2_weight: torch.Tensor,
+    w3_weight: torch.Tensor,
+    in_features: torch.Tensor,
+) -> torch.Tensor:
     """Given the weights of a SwiGLU network, return
     the output of your implementation with these weights.
 
@@ -91,7 +103,17 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    from cs336_basics.transfomer.swiglu import SwiGLU
+    dtype = torch.float32
+    device = torch.device('cpu')
+    swiglu = SwiGLU(d_model, d_ff)
+    state1 = {'w1':w1_weight.to(dtype=dtype, device=device)}
+    state2 = {'w2':w2_weight.to(dtype=dtype, device=device)}
+    state3 = {'w3':w3_weight.to(dtype=dtype, device=device)}
+    swiglu.load_state_dict(state1, strict=False)
+    swiglu.load_state_dict(state2, strict=False)
+    swiglu.load_state_dict(state3, strict=False)
+    return swiglu(in_features)
 
 
 def run_scaled_dot_product_attention(
@@ -112,7 +134,9 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    from cs336_basics.transfomer.scaled_dot_product_attention import scaled_dot_product_attention
+    attn = scaled_dot_product_attention(Q, K, V, mask)
+    return attn
 
 
 def run_multihead_self_attention(
@@ -193,9 +217,9 @@ def run_rope(
     d_k: int,
     theta: float,
     max_seq_len: int,
-    in_query_or_key: Float[Tensor, " ... sequence_length d_k"],
-    token_positions: Int[Tensor, " ... sequence_length"],
-) -> Float[Tensor, " ... sequence_length d_k"]:
+    in_query_or_key: torch.Tensor,
+    token_positions: torch.Tensor,
+) -> torch.Tensor:
     """
     Run RoPE for a given input tensor.
 
@@ -208,7 +232,9 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    from cs336_basics.transfomer.rope import RoPE
+    rope = RoPE(theta, d_k, max_seq_len, device='cpu')
+    return rope(in_query_or_key, token_positions)
 
 
 def run_transformer_block(
@@ -369,9 +395,9 @@ def run_transformer_lm(
 def run_rmsnorm(
     d_model: int,
     eps: float,
-    weights: Float[Tensor, " d_model"],
-    in_features: Float[Tensor, " ... d_model"],
-) -> Float[Tensor, " ... d_model"]:
+    weights: torch.tensor,
+    in_features: torch.tensor,
+) -> torch.tensor:
     """Given the weights of a RMSNorm affine transform,
     return the output of running RMSNorm on the input features.
 
@@ -386,7 +412,13 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+    from cs336_basics.transfomer.rmsnorm import RMSNorm
+    device = torch.device('cpu')
+    dtype = torch.float32
+    rms = RMSNorm(d_model, eps, device, dtype)
+    state = {'weight': weights.to(device=device, dtype=dtype)}
+    rms.load_state_dict(state)
+    return rms(in_features)
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -439,7 +471,8 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    raise NotImplementedError
+    from cs336_basics.transfomer.softmax import Softmax
+    return Softmax(in_features, dim)
 
 
 def run_cross_entropy(
