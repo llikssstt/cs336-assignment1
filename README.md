@@ -183,9 +183,9 @@ uv run python -m cs336_basics.train \
     --num_layers 4 \
     --num_heads 16 \
     --d_ff 1344 \
-    --batch_size 256 \
-    --max_iters 1000 \
-    --warmup_iters 100 \
+    --batch_size 64 \
+    --max_iters 2500 \
+    --warmup_iters 250 \
     --lr 1e-3 \
     --min_lr 1e-4 \
     --weight_decay 0.1 \

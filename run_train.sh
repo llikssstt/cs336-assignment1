@@ -1,0 +1,20 @@
+uv run python -m cs336_basics.train \
+    --train_data /mnt/d/cs336/data/tinystories_bpe.npy \
+    --vocab_size 10000 \
+    --context_length 256 \
+    --d_model 512 \
+    --num_layers 4 \
+    --num_heads 16 \
+    --d_ff 1344 \
+    --batch_size 64 \
+    --max_iters 2500 \
+    --warmup_iters 250 \
+    --lr 1e-3 \
+    --min_lr 1e-4 \
+    --weight_decay 0.1 \
+    --max_grad_norm 1.0 \
+    --log_interval 50 \
+    --eval_interval 500 \
+    --checkpoint_interval 1000 \
+    --checkpoint_dir ./checkpoints \
+    --wandb_project tinystories-lm

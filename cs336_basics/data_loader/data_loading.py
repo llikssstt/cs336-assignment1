@@ -5,7 +5,7 @@ import torch.nn as nn
 def data_loading(x, batch_size, context_length, device='cuda:0') -> tuple[torch.Tensor, torch.Tensor]:
     N = int(x.shape[0])
 
-    max_start = N - context_length
+    max_start = N - context_length - 1  # -1 because targets use idx+1
     starts = torch.randint(
         low=0,
         high=max_start,
